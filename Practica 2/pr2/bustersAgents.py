@@ -443,7 +443,7 @@ class BasicAgentAA(BustersAgent, Cola):
         score0 = gameState.getScore()
 
 
-        
+
 
 
 
@@ -454,7 +454,7 @@ class BasicAgentAA(BustersAgent, Cola):
         #x = [posX, posY]
 
 
-        
+
         #P3
         x = [posX,posY, north,south,east,west, d1X, d1Y, d1, d2X, d2Y, d2, d3X, d3Y, d3,  d4X,d4Y, d4, g1g2X,g1g2Y,d1d2, g1g3X, g1g3Y, d1d3, g1g4X, g1g4Y, d1d4, g2g3X, g2g3Y, d2d3, g2g4X, g2g4Y, d2d4, g3g4X, g3g4Y, d3d4]
 
@@ -466,18 +466,18 @@ class BasicAgentAA(BustersAgent, Cola):
 
         #Para eliminar los NONE y ponerle -1 que es lo que se tienen en los .arff
         for i in range (0, len(x)):
-            
+
             if x[i]==None:
                 x[i] = -1
             print(x[i])
-       
-       
+
+
         a = self.weka.predict("./smoP3.model", x, "./training_keyboardP3.arff")
 
-                
+
         if a in gameState.getLegalPacmanActions():
             return a
-        
+
 
         move = Directions.STOP
         legal = gameState.getLegalActions(0) ##Legal position from the pacman
@@ -498,9 +498,9 @@ class BasicAgentAA(BustersAgent, Cola):
             return move
 
 
-        
-       
-        
+
+
+
 
 
     def printLineData(self, gameState):
@@ -580,6 +580,7 @@ class QLearningAgent(BustersAgent):
         - self.alpha (learning rate)
         - self.discount (discount rate)
     """
+
     def __init__(self, index = 0, inference="ExactInference", ghostAgents=None):
         "Initialize Q-values"
         inferenceType= util.lookup(inference, globals())
@@ -645,7 +646,7 @@ class QLearningAgent(BustersAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-     	legalActions = self.getLegalActions(state)
+     	legalActions = state.getLegalActions(0)
         if len(legalActions)==0:
           return 0
         return max(self.q_table[self.computePosition(state)])
@@ -656,7 +657,7 @@ class QLearningAgent(BustersAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        legalActions = self.getLegalActions(state)
+        legalActions = state.getLegalActions(0)
         if len(legalActions)==0:
           return None
 
@@ -682,7 +683,7 @@ class QLearningAgent(BustersAgent):
         """
 
         # Pick Action
-        legalActions = self.getLegalActions(state)
+        legalActions = state.getLegalActions(0)
         action = None
 
         if len(legalActions) == 0:
@@ -708,25 +709,25 @@ class QLearningAgent(BustersAgent):
 	  Q-Learning update:
 
 	  if terminal_state:
-		 
+
 	  else:
 	  	Q(state,action) <- (1-self.alpha) Q(state,action) + self.alpha * (r + self.discount * max a' Q(nextState, a'))
-		
+
         """
         "*** YOUR CODE HERE ***"
 
-        legalActionsNextState = self.getLegalActions(nextState)
+        legalActionsNextState = state.getLegalActions(nextState)
         position = self.computePosition(state)
         action_column = self.actions[action]
         if len(legalActionsNextState)==0:
             #estado terminal
             self.q_table[position][action_column] = (1-self.alpha) * (self.q_table[position][action_column]) + self.alpha * (reward + 0)
 
-        #estado no terminal. 
-        else:   
+        #estado no terminal.
+        else:
             self.q_table[position][action_column] = (1-self.alpha) * (self.q_table[position][action_column]) + self.alpha * (reward + self.discount *  max(self.q_table[self.computePosition(nextState)]))
 
-        
+
     def getPolicy(self, state):
 	"Return the best action in the qtable for a given state"
         return self.computeActionFromQValues(state)
@@ -734,3 +735,8 @@ class QLearningAgent(BustersAgent):
     def getValue(self, state):
 	"Return the highest q value for a given state"
         return self.computeValueFromQValues(state)
+
+
+
+    def printLineData(self, gameState):
+        "coment"
