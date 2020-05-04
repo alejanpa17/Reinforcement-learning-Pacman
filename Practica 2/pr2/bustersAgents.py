@@ -580,10 +580,12 @@ class QLearningAgent(BustersAgent):
         - self.alpha (learning rate)
         - self.discount (discount rate)
     """
-    def __init__(self, **args):
+    def __init__(self, index = 0, inference="ExactInference", ghostAgents=None):
         "Initialize Q-values"
+        inferenceType= util.lookup(inference, globals())
+        self.inferenceModules = [inferenceType(a)  for a in ghostAgents]
         #ReinforcementAgent.__init__(self, **args)
-
+        self.inferenceModules
         self.actions = {"north":0, "east":1, "south":2, "west":3, "exit":4}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
