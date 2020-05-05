@@ -18,7 +18,7 @@ from game import Directions
 from keyboardAgents import KeyboardAgent
 import inference
 import busters
-from wekaI import Weka
+#from wekaI import Weka
 
 class NullGraphics:
     "Placeholder for graphics"
@@ -76,8 +76,8 @@ class BustersAgent:
         self.next_random_move = 0
         self.posX_random_move = -1
         self.posY_random_move = -1
-        self.weka= Weka()
-        self.weka.start_jvm()
+        #elf.weka= Weka()
+        #self.weka.start_jvm()
 
     def registerInitialState(self, gameState):
         "Initializes beliefs and inference modules"
@@ -472,7 +472,7 @@ class BasicAgentAA(BustersAgent, Cola):
             print(x[i])
 
 
-        a = self.weka.predict("./smoP3.model", x, "./training_keyboardP3.arff")
+        #a = self.weka.predict("./smoP3.model", x, "./training_keyboardP3.arff")
 
 
         if a in gameState.getLegalPacmanActions():
@@ -587,7 +587,7 @@ class QLearningAgent(BustersAgent):
         self.inferenceModules = [inferenceType(a)  for a in ghostAgents]
         #ReinforcementAgent.__init__(self, **args)
         self.inferenceModules
-        self.actions = {"north":0, "east":1, "south":2, "west":3, "exit":4}
+        self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop":4} #quitar lo de stop
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.05
@@ -619,12 +619,12 @@ class QLearningAgent(BustersAgent):
         self.writeQtable()
         self.table_file.close()
 
-    def computePosition(self, state):
+    def computePosition(self, state): #Cambiar
 	"""
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
-        return state[0]+state[1]*4
+        return 0
 
     def getQValue(self, state, action):
 
@@ -635,6 +635,8 @@ class QLearningAgent(BustersAgent):
         """
         position = self.computePosition(state)
         action_column = self.actions[action]
+
+        print position, action_column
 
         return self.q_table[position][action_column]
 
