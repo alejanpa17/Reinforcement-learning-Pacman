@@ -590,7 +590,11 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop":4} #quitar lo de stop
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.05
+        self.epsilon = 0.1
+        self.alpha = 1.0
+        self.discount = 0.8
+        self.lastState = None
+
 
     def readQtable(self):
 	"Read qtable from disc"
@@ -624,7 +628,11 @@ class QLearningAgent(BustersAgent):
 	Compute the row of the qtable for a given state.
 	For instance, the state (3,1) is the row 7
 	"""
-        return 0
+        d1X =  abs(state.getGhostPositions()[0][0]-state.getPacmanPosition()[0])
+        d1Y = abs(state.getGhostPositions()[0][1]-state.getPacmanPosition()[1])
+        dis = d1X + d1Y
+
+        return dis
 
     def getQValue(self, state, action):
 
@@ -636,7 +644,7 @@ class QLearningAgent(BustersAgent):
         position = self.computePosition(state)
         action_column = self.actions[action]
 
-        print position, action_column
+        #print position, action_column
 
         return self.q_table[position][action_column]
 
@@ -672,7 +680,6 @@ class QLearningAgent(BustersAgent):
             if value > best_value:
                 best_actions = [action]
                 best_value = value
-
         return random.choice(best_actions)
 
     def getAction(self, state):
@@ -684,18 +691,38 @@ class QLearningAgent(BustersAgent):
           should choose None as the action.
         """
 
+
         # Pick Action
         legalActions = state.getLegalActions(0)
+        #print state
         action = None
+        reward = 0
 
         if len(legalActions) == 0:
-             return action
+            return action
 
         flip = util.flipCoin(self.epsilon)
 
         if flip:
-		    return random.choice(legalActions)
-        return self.getPolicy(state)
+            action = random.choice(legalActions)
+        else:
+            action = self.getPolicy(state)
+
+        if not state.getLivingGhosts()[1]: #Fantasma comido
+            reward = 1
+
+        d1X =  abs(state.getGhostPositions()[0][0]-state.getPacmanPosition()[0])
+        d1Y = abs(state.getGhostPositions()[0][1]-state.getPacmanPosition()[1])
+        dis = d1X + d1Y
+
+        if dis == 1: #Prueba
+            reward = 1
+
+        if self.lastState != None:
+            self.update(self.lastState, action, state, reward)
+
+        self.lastState = state
+        return action
 
 
     def update(self, state, action, nextState, reward):
@@ -718,7 +745,9 @@ class QLearningAgent(BustersAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        legalActionsNextState = state.getLegalActions(nextState)
+        #print reward
+
+        legalActionsNextState = state.getLegalActions(0)
         position = self.computePosition(state)
         action_column = self.actions[action]
         if len(legalActionsNextState)==0:
