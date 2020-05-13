@@ -587,13 +587,15 @@ class QLearningAgent(BustersAgent):
         self.inferenceModules = [inferenceType(a)  for a in ghostAgents]
         #ReinforcementAgent.__init__(self, **args)
         self.inferenceModules
-        self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4, "Stop":4} #quitar lo de stop
+        self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4} #quitar lo de stop
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.1
         self.alpha = 1.0
         self.discount = 0.8
         self.lastState = None
+        self.lastAction = None
+
 
 
     def readQtable(self):
@@ -668,8 +670,11 @@ class QLearningAgent(BustersAgent):
           you should return None.
         """
         legalActions = state.getLegalActions(0)
+        if "Stop" in legalActions:
+            legalActions.remove("Stop")
+
         if len(legalActions)==0:
-          return None
+          return "Exit"
 
         best_actions = [legalActions[0]]
         best_value = self.getQValue(state, legalActions[0])
@@ -694,11 +699,18 @@ class QLearningAgent(BustersAgent):
 
         # Pick Action
         legalActions = state.getLegalActions(0)
+        if "Stop" in legalActions:
+            legalActions.remove("Stop")
         #print state
-        action = None
+        action = "Exit"
         reward = 0
+        print state.getPacmanPosition()[0], state.getPacmanPosition()[1]
+        print state.getGhostPositions()[0][0], state.getGhostPositions()[0][1]
+
+
 
         if len(legalActions) == 0:
+            print "NONE"
             return action
 
         flip = util.flipCoin(self.epsilon)
@@ -718,10 +730,11 @@ class QLearningAgent(BustersAgent):
         if dis == 1: #Prueba
             reward = 1
 
-        if self.lastState != None:
-            self.update(self.lastState, action, state, reward)
-
+        #if self.lastState != None:
+        #    self.update(self.lastState, self.lastAction, state, reward)
+        print self.lastAction, action
         self.lastState = state
+        self.lastAction = action
         return action
 
 
@@ -767,6 +780,33 @@ class QLearningAgent(BustersAgent):
 	"Return the highest q value for a given state"
         return self.computeValueFromQValues(state)
 
+
+    def chooseAction (self, state):
+
+
+        #Defino refuerzo
+        reward = self.frefuerzo(state)
+        action = self.getAction(state)
+
+        #VER
+        self.update(self.state, action, self.state, reward)
+
+        return action
+
+    def frefuerzo(self, state):
+
+        #200 puntos si consigue comerse un fantasmas
+
+        for i in range(0, state.getNumAgents()-1):
+
+            if state.getPacmanPosition()[0] == state.getGhostPositions()[i][0] and  state.getPacmanPosition()[1] == state.getGhostPositions()[i][1]:
+                return 200
+
+        #Si llega a una comida cercana entonces refuerzo 100
+        if state.getDistanceNearestFood() == 0:
+            return 100
+        else:
+            return 0
 
 
     def printLineData(self, gameState):
