@@ -87,6 +87,8 @@ class BustersAgent:
             inference.initialize(gameState)
         self.ghostBeliefs = [inf.getBeliefDistribution() for inf in self.inferenceModules]
         self.firstMove = True
+        self.distancer = Distancer(gameState.data.layout, False)
+
 
     def observationFunction(self, gameState):
         "Removes the ghost states from the gameState"
@@ -565,9 +567,10 @@ class BasicAgentAA(BustersAgent, Cola):
             #print self.pop()
 
 
-        #print self.size()
 
-        #print estado
+from distanceCalculator import Distancer
+
+
 class QLearningAgent(BustersAgent):
     """
       Q-Learning Agent
@@ -585,9 +588,8 @@ class QLearningAgent(BustersAgent):
         "Initialize Q-values"
         inferenceType= util.lookup(inference, globals())
         self.inferenceModules = [inferenceType(a)  for a in ghostAgents]
-        #ReinforcementAgent.__init__(self, **args)
         self.inferenceModules
-        self.actions = {"North":0, "East":1, "South":2, "West":3, "Exit":4} #quitar lo de stop
+        self.actions = {"North":0, "East":1, "South":2, "West":3} #quitar lo de stop
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.1
@@ -706,6 +708,8 @@ class QLearningAgent(BustersAgent):
         reward = 0
         print state.getPacmanPosition()[0], state.getPacmanPosition()[1]
         print state.getGhostPositions()[0][0], state.getGhostPositions()[0][1]
+        print state.data.ghostDistances[0]
+
 
 
 
@@ -720,18 +724,16 @@ class QLearningAgent(BustersAgent):
         else:
             action = self.getPolicy(state)
 
-        if not state.getLivingGhosts()[1]: #Fantasma comido
-            reward = 1
 
         d1X =  abs(state.getGhostPositions()[0][0]-state.getPacmanPosition()[0])
         d1Y = abs(state.getGhostPositions()[0][1]-state.getPacmanPosition()[1])
         dis = d1X + d1Y
 
-        if dis == 1: #Prueba
-            reward = 1
+        reward = self.frefuerzo(state)
 
-        #if self.lastState != None:
-        #    self.update(self.lastState, self.lastAction, state, reward)
+        if self.lastState != None:
+            self.update(self.lastState, self.lastAction, state, reward)
+
         print self.lastAction, action
         self.lastState = state
         self.lastAction = action
@@ -758,7 +760,7 @@ class QLearningAgent(BustersAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        #print reward
+        print reward
 
         legalActionsNextState = state.getLegalActions(0)
         position = self.computePosition(state)
@@ -789,6 +791,7 @@ class QLearningAgent(BustersAgent):
         action = self.getAction(state)
 
         #VER
+        print "HOLAA"
         self.update(self.state, action, self.state, reward)
 
         return action
@@ -811,3 +814,58 @@ class QLearningAgent(BustersAgent):
 
     def printLineData(self, gameState):
         "coment"
+
+    def final(self, state):
+        reward = self.frefuerzo(state)
+        if self.lastState != None:
+            self.update(self.lastState, self.lastAction, state, reward)
+
+        print "FANTASMAS VIVOS ", state.getLivingGhosts()
+
+    '''Calcula la distancia de Manhattan entre dos posiciones '''
+    def manhattan (self, origin, target):
+        return abs(origin[0] - target[0]) + abs(origin[1] + target [1])
+
+
+    '''Comprueba si esta en un tunel'''
+    def inTunnel(self, state):
+        acclegales = state.getLegalActions(0)
+        if len(acclegales) == 2 and ("North" in acclegales and "South" in acclegales) or ("East" in acclegales and "West" in acclegales) :
+            return True
+        return False
+
+
+
+
+
+
+    '''Distancia al fantasma mas cercano '''
+    def distNearGhost (self, state):
+
+        nearest_distance = 9999999
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = state.data.ghostDistances[i]
+                if distance < nearest_distance:
+                    nearest_distance = distance
+        return nearest_distance
+
+
+    '''Distancia al fantasma mas cercano '''
+    def distNearGhostDisc (self, state):
+
+        nearest_distance = 9999999
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = state.data.ghostDistances[i]
+                if distance < nearest_distance:
+                    nearest_distance = distance
+
+        if nearest_distance <= 3:
+            return 0
+        if nearest_distance > 3 and nearest_distance <= 6:
+            return 1
+        if nearest_distance > 6 and nearest_distance <= 10:
+            return 2
+        if nearest_distance >= 10:
+            return 3
