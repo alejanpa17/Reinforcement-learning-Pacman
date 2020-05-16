@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -148,12 +148,18 @@ def computeDistances(layout):
     for source in allNodes:
         dist = {}
         closed = {}
+        dir = {}
         for node in allNodes:
             dist[node] = sys.maxint
+            dir[node] = "Stop"
+
         import util
         queue = util.PriorityQueue()
         queue.push(source, 0)
         dist[source] = 0
+        dir[source] = "Stop"
+        #print "SOURCE: ", source
+
         while not queue.isEmpty():
             node = queue.pop()
             if node in closed:
@@ -161,25 +167,72 @@ def computeDistances(layout):
             closed[node] = True
             nodeDist = dist[node]
             adjacent = []
+            direction = []
             x, y = node
             if not layout.isWall((x,y+1)):
                 adjacent.append((x,y+1))
+                direction.append(((x,y+1), "North"))
+
             if not layout.isWall((x,y-1)):
                 adjacent.append((x,y-1) )
+                direction.append(((x,y-1), "South"))
+
             if not layout.isWall((x+1,y)):
                 adjacent.append((x+1,y) )
+                direction.append(((x+1,y), "East"))
+
             if not layout.isWall((x-1,y)):
                 adjacent.append((x-1,y))
+                direction.append(((x-1,y), "West"))
+
+            #print "DIST: ", dist
+            #print "DIR: ", dir
+            #print "ADJA: ", direction
             for other in adjacent:
                 if not other in dist:
                     continue
                 oldDist = dist[other]
                 newDist = nodeDist+1
                 if newDist < oldDist:
+                    for dirr in direction:
+                        if dirr[0] == other:
+                            #print "HOLA: ", dirr[1]
+                            dir[other] = dirr[1]
                     dist[other] = newDist
                     queue.push(other, newDist)
         for target in allNodes:
-            distances[(target, source)] = dist[target]
+            distances[(target, source)] = dist[target], dir[target]
+
+    #print "DIST and DIR: ",distances
+    for i in range(0, len(distances)):
+        for j in range(i, len(distances)):
+            if distances.items()[i][0][0] == distances.items()[j][0][1] and distances.items()[i][0][1] == distances.items()[j][0][0] and distances.items()[i][0][0] != distances.items()[i][0][1]:
+                #print distances.items()[i][0][0], distances.items()[i][0][1], distances.items()[i][1][1]
+                dir_1 = distances.items()[i][1][1]
+                dir_2 = distances.items()[j][1][1]
+
+                if dir_1 == "North":
+                    distances[(distances.items()[j][0][0], distances.items()[j][0][1])] = distances.items()[j][1][0], "South"
+                elif dir_1 == "South":
+                    distances[(distances.items()[j][0][0], distances.items()[j][0][1])] = distances.items()[j][1][0], "North"
+                elif dir_1 == "East":
+                    distances[(distances.items()[j][0][0], distances.items()[j][0][1])] = distances.items()[j][1][0], "West"
+                elif dir_1 == "West":
+                    distances[(distances.items()[j][0][0], distances.items()[j][0][1])] = distances.items()[j][1][0], "East"
+
+                if dir_2 == "North":
+                    distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "South"
+                elif dir_2 == "South":
+                    distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "North"
+                elif dir_2 == "East":
+                    distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "West"
+                elif dir_2 == "West":
+                    distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "East"
+
+
+    #key = (pos1, pos2)
+    #distances[key]
+    print "DIST and DIR: ",distances
     return distances
 
 
@@ -188,4 +241,3 @@ def getDistanceOnGrid(distances, pos1, pos2):
     if key in distances:
       return distances[key]
     return 100000
-

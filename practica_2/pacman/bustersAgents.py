@@ -706,10 +706,10 @@ class QLearningAgent(BustersAgent):
         #print state
         action = "Exit"
         reward = 0
-        print state.getPacmanPosition()[0], state.getPacmanPosition()[1]
-        print state.getGhostPositions()[0][0], state.getGhostPositions()[0][1]
-        print state.data.ghostDistances[0]
-
+        #print state.getPacmanPosition()[0], state.getPacmanPosition()[1]
+        #print state.getGhostPositions()[0][0], state.getGhostPositions()[0][1]
+        #print state.data.ghostDistances[0]
+        self.distNearGhostWall(state)
 
 
 
@@ -725,9 +725,18 @@ class QLearningAgent(BustersAgent):
             action = self.getPolicy(state)
 
 
-        d1X =  abs(state.getGhostPositions()[0][0]-state.getPacmanPosition()[0])
-        d1Y = abs(state.getGhostPositions()[0][1]-state.getPacmanPosition()[1])
-        dis = d1X + d1Y
+
+        dis = self.distNearGhost(state)
+
+        position = self.positionNearestGhost(state)
+
+        #print "POSITION NEAREST GHOST", position
+
+        zonaGhost = self.getZoneNearestGhost(state)
+        #print "ZONA", zonaGhost
+
+
+
 
         reward = self.frefuerzo(state)
 
@@ -760,7 +769,7 @@ class QLearningAgent(BustersAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        print reward
+        print "REWARD: ", reward
 
         legalActionsNextState = state.getLegalActions(0)
         position = self.computePosition(state)
@@ -815,6 +824,8 @@ class QLearningAgent(BustersAgent):
     def printLineData(self, gameState):
         "coment"
 
+
+    '''Ultimo estado, se come a todos los fantasmas'''
     def final(self, state):
         reward = self.frefuerzo(state)
         if self.lastState != None:
@@ -835,11 +846,63 @@ class QLearningAgent(BustersAgent):
         return False
 
 
+    '''Distancia Manhattan al fantasma mas cercano esquivando muros'''
+    def distNearGhostWall (self, state):
+        nearest_distance = 9999999
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = self.distancer.getDistance(state.getPacmanPosition(), state.getGhostPositions()[i])
+                if distance[0] < nearest_distance:
+                        nearest_distance = distance[0]
+        print nearest_distance
+        return nearest_distance
 
 
+    '''Distancia Manhattan a la comida mas cercana esquivando muros'''
+    def distNearFoodWall (self, state):
+        nearest_distance = 9999999
+        width, height = state.data.layout.width, state.data.layout.height
+        for i in range(0, width):
+            for j in range(0, height):
+                if state.data.food[i][j]:
+                    distance = self.distancer.getDistance(state.getPacmanPosition(), (i, j))
+                    if distance[0] < nearest_distance:
+                        nearest_distance = distance[0]
+        print nearest_distance
+        return nearest_distance
 
 
-    '''Distancia al fantasma mas cercano '''
+    '''Direccion Manhattan al fantasma mas cercano esquivando muros'''
+    def dirNearGhostWall (self, state):
+        nearest_distance = 9999999
+        direccion = "Stop"
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = self.distancer.getDistance(state.getPacmanPosition(), state.getGhostPositions()[i])
+                if distance[0] < nearest_distance:
+                        nearest_distance = distance[0]
+                        direccion = distance[1]
+        print direccion
+        return direccion
+
+
+    '''Direccion Manhattan a la comida mas cercana esquivando muros'''
+    def dirNearFoodWall (self, state):
+        nearest_distance = 9999999
+        width, height = state.data.layout.width, state.data.layout.height
+        direccion = "Stop"
+        for i in range(0, width):
+            for j in range(0, height):
+                if state.data.food[i][j]:
+                    distance = self.distancer.getDistance(state.getPacmanPosition(), (i, j))
+                    if distance[0] < nearest_distance:
+                        nearest_distance = distance[0]
+                        direccion = distance[1]
+        print direccion
+        return direccion
+
+
+    '''Distancia Manhattan  al fantasma mas cercano'''
     def distNearGhost (self, state):
 
         nearest_distance = 9999999
@@ -851,15 +914,10 @@ class QLearningAgent(BustersAgent):
         return nearest_distance
 
 
-    '''Distancia al fantasma mas cercano '''
+    '''Distancia Manhattan al fantasma mas cercano discretizado '''
     def distNearGhostDisc (self, state):
 
-        nearest_distance = 9999999
-        for i in range (0, state.getNumAgents() - 1):
-            if state.getLivingGhosts()[i+1]:
-                distance = state.data.ghostDistances[i]
-                if distance < nearest_distance:
-                    nearest_distance = distance
+        nearest_distance = self.distNearGhost(state)
 
         if nearest_distance <= 3:
             return 0
@@ -869,3 +927,63 @@ class QLearningAgent(BustersAgent):
             return 2
         if nearest_distance >= 10:
             return 3
+
+
+    def positionNearestGhost(self, state):
+        nearest_distance = 9999999
+        nearest_position = (0, 0)
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = state.data.ghostDistances[i]
+                if distance < nearest_distance:
+                    nearest_distance = distance
+                    nearest_position = state.getGhostPositions()[i]
+        return nearest_position
+
+
+
+
+    def getZoneNearestGhost(self, state):
+
+        pacmanPosition = state.getPacmanPosition()
+        nearest_position = self.positionNearestGhost(state)
+
+        if pacmanPosition[0] == nearest_position[0]:
+
+            if nearest_position[1] > pacmanPosition[1]:
+                #print "NORTE", pacmanPosition
+                return 0
+            else:
+                #print "SUR", pacmanPosition
+                return 1
+
+
+        if pacmanPosition[1] == nearest_position[1]:
+
+            if nearest_position[0] < pacmanPosition[0]:
+                #print "OESTE", pacmanPosition
+                return 2
+            else:
+                #print "ESTE", pacmanPosition
+                return 3
+
+
+        if pacmanPosition[0] > nearest_position[0]:
+
+            if nearest_position[1] > pacmanPosition[1]:
+
+                #print "NOROESTE", pacmanPosition
+                return 4
+            else:
+                #print "SUROESTE", pacmanPosition
+                return 5
+
+        if pacmanPosition[0] < nearest_position[0]:
+
+            if nearest_position[1] > pacmanPosition[1]:
+
+                #print "NOR--ESTE", pacmanPosition
+                return 6
+            else:
+                #print "SUR--ESTE", pacmanPosition
+                return 7
