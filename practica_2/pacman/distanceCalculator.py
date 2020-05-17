@@ -203,8 +203,8 @@ def computeDistances(layout):
         for target in allNodes:
             distances[(target, source)] = dist[target], dir[target]
 
-    #print "DIST and DIR: ",distances
-    for i in range(0, len(distances)):
+    #print "DIST and DIR: ",len(distances)
+    """for i in range(0, len(distances)):
         for j in range(i, len(distances)):
             if distances.items()[i][0][0] == distances.items()[j][0][1] and distances.items()[i][0][1] == distances.items()[j][0][0] and distances.items()[i][0][0] != distances.items()[i][0][1]:
                 #print distances.items()[i][0][0], distances.items()[i][0][1], distances.items()[i][1][1]
@@ -228,11 +228,11 @@ def computeDistances(layout):
                     distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "West"
                 elif dir_2 == "West":
                     distances[(distances.items()[i][0][0], distances.items()[i][0][1])] = distances.items()[i][1][0], "East"
-
+                    """
 
     #key = (pos1, pos2)
     #distances[key]
-    print "DIST and DIR: ",distances
+    #print "DIST and DIR: ",distances
     return distances
 
 
