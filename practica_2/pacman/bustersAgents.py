@@ -589,16 +589,17 @@ class QLearningAgent(BustersAgent):
         inferenceType= util.lookup(inference, globals())
         self.inferenceModules = [inferenceType(a)  for a in ghostAgents]
         self.inferenceModules
-        self.actions = {"North":0, "East":1, "South":2, "West":3}
+        self.actions = {"North":0, "South":1, "East":2,  "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
         self.epsilon = 0.0
-        self.alpha = 1.0
+        self.alpha = 0.0
         self.discount = 0.8
         self.lastState = None
         self.lastAction = None
         self.countActions = 0
         self.food = 0
+        self.option = 0
 
 
     def readQtable(self):
@@ -636,12 +637,18 @@ class QLearningAgent(BustersAgent):
         #d1X =  abs(state.getGhostPositions()[0][0]-state.getPacmanPosition()[0])
         #d1Y = abs(state.getGhostPositions()[0][1]-state.getPacmanPosition()[1])
         #dis = d1X + d1Y
-        state_0 = self.dirNearGhostWallDisc(state)
-        state_1 = self.dirNearFoodWallDisc(state)
-        state_2 = self.distNearGhostWallDisc(state)
-        state_3 = self.distNearFoodWallDisc(state)
+        if self.option == 0:
+            state_0 = self.dirNearGhostWallDisc(state)
+            state_1 = self.dirNearFoodWallDisc(state)
+            state_2 = self.distNearGhostWallDisc(state)
+            state_3 = self.distNearFoodWallDisc(state)
+            return state_0 + 4*state_1 + 20*state_2 + 80*state_3
 
-        return state_0 + 5*state_1 + 25*state_2 + 100*state_3
+        if self.option == 1:
+            state_0 = self.dirNearGhostWallDisc(state)
+            state_1 = self.dirNearFoodWallDisc(state)
+            return state_0 + 4*state_1
+
 
     def getQValue(self, state, action):
 
@@ -930,6 +937,7 @@ class QLearningAgent(BustersAgent):
     '''Direccion Manhattan al fantasma mas cercano esquivando muros discretizado'''
     def dirNearGhostWallDisc (self, state):
         direction = self.dirNearGhostWall(state)
+        #print direction
         if direction == "North":
             return 0
         if direction == "South":
@@ -938,8 +946,8 @@ class QLearningAgent(BustersAgent):
             return 2
         if direction == "West":
             return 3
-        if direction == "Stop":
-            return 4
+        #if direction == "Stop":
+            #return 4
 
 
     '''Direccion Manhattan a la comida mas cercana esquivando muros'''
