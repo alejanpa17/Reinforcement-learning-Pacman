@@ -592,14 +592,14 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "South":1, "East":2,  "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.0
-        self.alpha = 0.0
-        self.discount = 0.8
+        self.epsilon = 0.1
+        self.alpha = 0.05
+        self.discount = 0.95
         self.lastState = None
         self.lastAction = None
         self.countActions = 0
         self.food = 0
-        self.option = 0
+        self.option = 1
 
 
     def readQtable(self):
