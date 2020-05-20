@@ -592,9 +592,9 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "South":1, "East":2,  "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.1
+        self.epsilon = 0.01
         self.alpha = 0.05
-        self.discount = 0.95
+        self.discount = 1.0
         self.lastState = None
         self.lastAction = None
         self.countActions = 0
@@ -647,7 +647,9 @@ class QLearningAgent(BustersAgent):
         if self.option == 1:
             state_0 = self.dirNearGhostWallDisc(state)
             state_1 = self.dirNearFoodWallDisc(state)
-            return state_0 + 4*state_1
+            state_2 = self.bestFoodGhostWall(state)
+            print state_0 + 4*state_1 + 20*state_2
+            return state_0 + 4*state_1 + 20*state_2
 
 
     def getQValue(self, state, action):
@@ -937,7 +939,7 @@ class QLearningAgent(BustersAgent):
     '''Direccion Manhattan al fantasma mas cercano esquivando muros discretizado'''
     def dirNearGhostWallDisc (self, state):
         direction = self.dirNearGhostWall(state)
-        #print direction
+        print direction
         if direction == "North":
             return 0
         if direction == "South":
@@ -1013,6 +1015,58 @@ class QLearningAgent(BustersAgent):
             return 2
         if nearest_distance >= 10:
             return 3
+
+
+    '''Comprueba si es mejor ir a un fantasma o comida para maximizar puntuacion'''
+    def bestFoodGhostWall (self, state):
+
+        distance_nearFood = 9999999
+        position_nearFood = (-1, -1)
+        width, height = state.data.layout.width, state.data.layout.height
+        for i in range(0, width):
+            for j in range(0, height):
+                if state.data.food[i][j]:
+                    distance = self.distancer.getDistance(state.getPacmanPosition(), (i, j))
+                    if distance[0] < distance_nearFood:
+                        distance_nearFood = distance[0]
+                        position_nearFood = (i, j)
+
+        if position_nearFood == (-1, -1):
+            return 0
+
+        distance_farFood = 0
+        position_farFood = position_nearFood
+        for i in range(0, width):
+            for j in range(0, height):
+                if state.data.food[i][j]:
+                    distance = self.distancer.getDistance(position_nearFood, (i, j))
+                    if distance[0] > distance_farFood:
+                        distance_farFood = distance[0]
+                        position_farFood = (i, j)
+
+        distance_nearGhost = 9999999
+        position_nearGhost = (-1, -1)
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                distance = self.distancer.getDistance(position_farFood, state.getGhostPositions()[i])
+                if distance[0] < distance_nearGhost:
+                        distance_nearGhost = distance[0]
+                        position_nearGhost = state.getGhostPositions()[i]
+
+        distance_farGhost = 0
+        position_farGhost = position_nearGhost
+        livingGhost = 0
+        for i in range (0, state.getNumAgents() - 1):
+            if state.getLivingGhosts()[i+1]:
+                livingGhost = livingGhost + 1
+                distance = self.distancer.getDistance(position_nearGhost, state.getGhostPositions()[i])
+                if distance[0] > distance_farGhost:
+                        distance_farGhost = distance[0]
+                        position_farGhost = state.getGhostPositions()[i]
+
+        if - distance_nearFood - distance_farFood + state.getNumFood()*100 - distance_nearGhost - distance_farGhost + livingGhost*200 > 0:
+            return 1
+        return 0
 
 
     def positionNearestGhost(self, state):
