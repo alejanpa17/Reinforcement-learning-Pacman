@@ -592,9 +592,9 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "South":1, "East":2,  "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.01
+        self.epsilon = 0.2
         self.alpha = 0.05
-        self.discount = 1.0
+        self.discount = 0.8
         self.lastState = None
         self.lastAction = None
         self.countActions = 0
@@ -647,8 +647,11 @@ class QLearningAgent(BustersAgent):
         if self.option == 1:
             state_0 = self.dirNearGhostWallDisc(state)
             state_1 = self.dirNearFoodWallDisc(state)
-            state_2 = self.bestFoodGhostWall(state)
-            print state_0 + 4*state_1 + 20*state_2
+            #state_2 = self.bestFoodGhostWall(state)
+            state_2 = 0
+            if self.distNearGhostWall(state) < self.distNearFoodWall(state):
+                state_2 = 1
+            print state_0 + 4*state_1 + 20*state_2 + 1
             return state_0 + 4*state_1 + 20*state_2
 
 
