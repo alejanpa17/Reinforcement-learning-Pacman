@@ -778,8 +778,8 @@ class QLearningAgent(BustersAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        print "REWARD: ", reward
-        print state, action, nextState
+        #print "REWARD: ", reward
+        #print state, action, nextState
 
         legalActionsNextState = nextState.getLegalActions(0)
         position = self.computePosition(state)
