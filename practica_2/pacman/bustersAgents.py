@@ -592,13 +592,14 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "South":1, "East":2,  "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.2
-        self.alpha = 0.05
+        self.epsilon = 0.0
+        self.alpha = 0.0
         self.discount = 0.8
         self.lastState = None
         self.lastAction = None
         self.countActions = 0
         self.food = 0
+        self.ghostPositions = None
         self.option = 1
 
 
@@ -651,7 +652,7 @@ class QLearningAgent(BustersAgent):
             state_2 = 0
             if self.distNearGhostWall(state) < self.distNearFoodWall(state):
                 state_2 = 1
-            print state_0 + 4*state_1 + 20*state_2 + 1
+            #print state_0 + 4*state_1 + 20*state_2 + 1
             return state_0 + 4*state_1 + 20*state_2
 
 
@@ -717,20 +718,19 @@ class QLearningAgent(BustersAgent):
         #print state
         if self.countActions == 0:
             self.food = state.getNumFood()
+            self.ghostPositions = state.getGhostPositions()
 
 
         # Pick Action
         legalActions = state.getLegalActions(0)
         if "Stop" in legalActions:
             legalActions.remove("Stop")
-        #print state
+
         action = "Exit"
         reward = 0
         #print state.getPacmanPosition()[0], state.getPacmanPosition()[1]
         #print state.getGhostPositions()[0][0], state.getGhostPositions()[0][1]
         #print state.data.ghostDistances[0]
-        self.distNearGhostWall(state)
-
         #print "TICK: ", self.countActions
 
 
@@ -745,20 +745,12 @@ class QLearningAgent(BustersAgent):
         else:
             action = self.getPolicy(state)
 
-        dis = self.distNearGhost(state)
-
-        position = self.positionNearestGhost(state)
-
-        #print "POSITION NEAREST GHOST", position
-
-        zonaGhost = self.getZoneNearestGhost(state)
-        #print "ZONA", zonaGhost
         reward = self.frefuerzo(state)
 
         if self.lastState != None:
+            #print self.lastAction,self.lastState , state, reward
             self.update(self.lastState, self.lastAction, state, reward)
 
-        #print self.lastAction, action
         self.lastState = state
         self.lastAction = action
         self.countActions = self.countActions + 1
@@ -786,8 +778,8 @@ class QLearningAgent(BustersAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        #print "REWARD: ", reward
-        #print state, action, nextState
+        print "REWARD: ", reward
+        print state, action, nextState
 
         legalActionsNextState = nextState.getLegalActions(0)
         position = self.computePosition(state)
@@ -827,18 +819,19 @@ class QLearningAgent(BustersAgent):
     def frefuerzo(self, state):
 
         #200 puntos si consigue comerse un fantasmas
+        #print state.getPacmanPosition(), state.getGhostPositions(), self.lastState, state
 
         for i in range(0, state.getNumAgents()-1):
 
-            if state.getPacmanPosition()[0] == state.getGhostPositions()[i][0] and  state.getPacmanPosition()[1] == state.getGhostPositions()[i][1]:
+            if state.getPacmanPosition() == self.ghostPositions[i]:
+                self.ghostPositions = state.getGhostPositions()
                 return 200
 
         #Si llega a una comida cercana entonces refuerzo 100
         #print "HOLAA", self.food
 
         if self.food > state.getNumFood():
-            self.food -= self.food
-            #print "HOLAA"
+            self.food -= 1
             return 100
         else:
             return 0
@@ -942,7 +935,7 @@ class QLearningAgent(BustersAgent):
     '''Direccion Manhattan al fantasma mas cercano esquivando muros discretizado'''
     def dirNearGhostWallDisc (self, state):
         direction = self.dirNearGhostWall(state)
-        print direction
+        #print direction
         if direction == "North":
             return 0
         if direction == "South":
